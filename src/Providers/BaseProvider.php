@@ -69,7 +69,7 @@ abstract class BaseProvider implements AIProvider
         return $this;
     }
 
-    public function apiKey(string $apiKey): static
+    public function apiKey(#[\SensitiveParameter] string $apiKey): static
     {
         $this->apiKey = $apiKey;
 

@@ -140,7 +140,7 @@ class GeminiProvider extends BaseProvider
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_TIMEOUT => 120,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, &$httpCode, $callback) {
+            CURLOPT_WRITEFUNCTION => static function ($ch, $data) use (&$buffer, &$httpCode, $callback) {
                 if ($httpCode === 0) {
                     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 }
@@ -190,7 +190,7 @@ class GeminiProvider extends BaseProvider
     public function streamChat(array $messages, array $options = []): Generator
     {
         $chunks = [];
-        $this->streamChatRealtime($messages, function ($chunk) use (&$chunks) {
+        $this->streamChatRealtime($messages, static function ($chunk) use (&$chunks) {
             $chunks[] = $chunk;
         }, $options);
 

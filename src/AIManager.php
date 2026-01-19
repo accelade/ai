@@ -85,7 +85,7 @@ class AIManager
 
     public function provider(?string $name = null): AIProvider
     {
-        $name = $name ?? $this->defaultProvider ?? array_key_first($this->providers);
+        $name ??= $this->defaultProvider ?? array_key_first($this->providers);
 
         if (! $name || ! isset($this->providers[$name])) {
             throw new InvalidArgumentException("AI provider [{$name}] is not configured.");
@@ -168,9 +168,11 @@ class AIManager
     public function isConfigured(): bool
     {
         foreach ($this->providers as $provider) {
-            if ($provider->isConfigured()) {
-                return true;
+            if (! ($provider->isConfigured())) {
+                continue;
             }
+
+            return true;
         }
 
         return false;

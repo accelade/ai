@@ -47,7 +47,7 @@ class AIServiceProvider extends ServiceProvider
         );
 
         // Register the AI Manager
-        $this->app->singleton('accelade.ai', function () {
+        $this->app->singleton('accelade.ai', static function () {
             $manager = new AIManager;
 
             // Register built-in providers
@@ -109,17 +109,13 @@ class AIServiceProvider extends ServiceProvider
     protected function registerBladeDirectives(): void
     {
         // @aiScripts - Include AI JavaScript
-        Blade::directive('aiScripts', function () {
-            return "<?php echo view('accelade-ai::scripts')->render(); ?>";
-        });
+        Blade::directive('aiScripts', static fn () => "<?php echo view('accelade-ai::scripts')->render(); ?>");
 
         // @aiStyles - Include AI CSS
-        Blade::directive('aiStyles', function () {
-            return "<?php echo view('accelade-ai::styles')->render(); ?>";
-        });
+        Blade::directive('aiStyles', static fn () => "<?php echo view('accelade-ai::styles')->render(); ?>");
 
         // @aiGlobalSearch - Render the global search component
-        Blade::directive('aiGlobalSearch', function ($expression) {
+        Blade::directive('aiGlobalSearch', static function ($expression) {
             if (empty($expression)) {
                 return "<?php echo view('accelade-ai::components.global-search')->render(); ?>";
             }
@@ -128,7 +124,7 @@ class AIServiceProvider extends ServiceProvider
         });
 
         // @aiChat - Render the chat component
-        Blade::directive('aiChat', function ($expression) {
+        Blade::directive('aiChat', static function ($expression) {
             if (empty($expression)) {
                 return "<?php echo view('accelade-ai::components.chat')->render(); ?>";
             }
@@ -137,7 +133,7 @@ class AIServiceProvider extends ServiceProvider
         });
 
         // @aiCopilot - Render the copilot widget
-        Blade::directive('aiCopilot', function ($expression) {
+        Blade::directive('aiCopilot', static function ($expression) {
             if (empty($expression)) {
                 return "<?php echo view('accelade-ai::components.copilot')->render(); ?>";
             }
@@ -171,11 +167,11 @@ class AIServiceProvider extends ServiceProvider
         /** @var \Accelade\Accelade $accelade */
         $accelade = $this->app->make('accelade');
 
-        $accelade->registerScript('ai', function () {
+        $accelade->registerScript('ai', static function () {
             return view('accelade-ai::scripts')->render();
         });
 
-        $accelade->registerStyle('ai', function () {
+        $accelade->registerStyle('ai', static function () {
             return view('accelade-ai::styles')->render();
         });
     }

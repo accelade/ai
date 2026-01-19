@@ -78,11 +78,11 @@ class AIController extends Controller
             $options['model'] = $validated['model'];
         }
 
-        return response()->stream(function () use ($provider, $validated, $options) {
+        return response()->stream(static function () use ($provider, $validated, $options) {
             try {
                 $provider->streamChatRealtime(
                     $validated['messages'],
-                    function ($chunk) {
+                    static function ($chunk) {
                         echo 'data: '.json_encode(['content' => $chunk])."\n\n";
                         ob_flush();
                         flush();

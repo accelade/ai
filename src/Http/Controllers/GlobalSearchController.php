@@ -49,11 +49,13 @@ class GlobalSearchController extends Controller
         $results = [];
 
         foreach ($handlers as $handler) {
-            if (method_exists($handler, 'search')) {
-                $handlerResults = $handler->search($query, $useAI);
-                if (! empty($handlerResults)) {
-                    $results[] = $handlerResults;
-                }
+            if (! (method_exists($handler, 'search'))) {
+                continue;
+            }
+
+            $handlerResults = $handler->search($query, $useAI);
+            if (! empty($handlerResults)) {
+                $results[] = $handlerResults;
             }
         }
 

@@ -74,16 +74,14 @@ class OpenAIProvider extends BaseProvider
 
     public function chatWithTools(array $messages, array $tools, array $options = []): array
     {
-        $formattedTools = array_map(function ($tool) {
-            return [
-                'type' => 'function',
-                'function' => [
-                    'name' => $tool['name'],
-                    'description' => $tool['description'] ?? '',
-                    'parameters' => $tool['parameters'] ?? ['type' => 'object', 'properties' => []],
-                ],
-            ];
-        }, $tools);
+        $formattedTools = array_map(static fn ($tool) => [
+            'type' => 'function',
+            'function' => [
+                'name' => $tool['name'],
+                'description' => $tool['description'] ?? '',
+                'parameters' => $tool['parameters'] ?? ['type' => 'object', 'properties' => []],
+            ],
+        ], $tools);
 
         $response = $this->http()->post('/chat/completions', [
             'model' => $options['model'] ?? $this->getModel(),
@@ -99,13 +97,11 @@ class OpenAIProvider extends BaseProvider
 
         $toolCalls = null;
         if (isset($message['tool_calls'])) {
-            $toolCalls = array_map(function ($call) {
-                return [
-                    'id' => $call['id'],
-                    'name' => $call['function']['name'],
-                    'arguments' => json_decode($call['function']['arguments'], true) ?? [],
-                ];
-            }, $message['tool_calls']);
+            $toolCalls = array_map(static fn ($call) => [
+                'id' => $call['id'],
+                'name' => $call['function']['name'],
+                'arguments' => json_decode($call['function']['arguments'], true) ?? [],
+            ], $message['tool_calls']);
         }
 
         return [
@@ -122,7 +118,7 @@ class OpenAIProvider extends BaseProvider
     public function streamChat(array $messages, array $options = []): Generator
     {
         $chunks = [];
-        $this->streamChatRealtime($messages, function ($chunk) use (&$chunks) {
+        $this->streamChatRealtime($messages, static function ($chunk) use (&$chunks) {
             $chunks[] = $chunk;
         }, $options);
 
@@ -160,7 +156,7 @@ class OpenAIProvider extends BaseProvider
             CURLOPT_HEADER => false,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_TIMEOUT => 120,
-            CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$buffer, &$httpCode, $callback) {
+            CURLOPT_WRITEFUNCTION => static function ($ch, $data) use (&$buffer, &$httpCode, $callback) {
                 if ($httpCode === 0) {
                     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 }
