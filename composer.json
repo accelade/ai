@@ -64,7 +64,17 @@
         "test": "pest",
         "test:coverage": "pest --coverage",
         "format": "pint",
-        "format:test": "pint --test"
+        "format:test": "pint --test",
+        "mago": "./mago lint src/ || mago lint src/",
+        "mago:fix": "./mago lint src/ --fix || mago lint src/ --fix",
+        "analyse": [
+            "@format:test",
+            "@mago"
+        ],
+        "ci": [
+            "@analyse",
+            "@test"
+        ]
     },
     "config": {
         "allow-plugins": {

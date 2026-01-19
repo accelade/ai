@@ -3,7 +3,7 @@
 
 [source]
 paths = ["src"]
-excludes = ["vendor", "tests"]
+excludes = ["vendor", "tests", "dist"]
 
 # Disable some overly strict rules for this codebase
 [linter.rules.too-many-methods]

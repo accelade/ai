@@ -12,18 +12,25 @@
         'chat' => config('accelade-ai.chat'),
         'copilot' => config('accelade-ai.copilot'),
     ];
+
+    // Load the built JavaScript
+    $jsPath = __DIR__ . '/../../../dist/accelade-ai.js';
+    $inlineJs = file_exists($jsPath) ? file_get_contents($jsPath) : '';
 @endphp
+{{-- Configuration must be set before the module loads --}}
+<script>
+    window.AcceladeAI = window.AcceladeAI || {};
+    window.AcceladeAI.config = @json($aiConfig);
+</script>
+@if($inlineJs)
+<script>
+{!! $inlineJs !!}
+</script>
+@else
+{{-- Fallback: inline implementation if built assets not available --}}
 <script>
     window.AcceladeAI = window.AcceladeAI || {};
 
-    /**
-     * AI Provider Manager for client-side operations
-     */
-    AcceladeAI.config = @json($aiConfig);
-
-    /**
-     * Utility function to stream chat responses
-     */
     AcceladeAI.streamChat = async function(messages, options = {}) {
         const url = AcceladeAI.config.endpoints.stream;
         const response = await fetch(url, {
@@ -48,9 +55,6 @@
         return response.body;
     };
 
-    /**
-     * Utility function for non-streaming chat
-     */
     AcceladeAI.chat = async function(messages, options = {}) {
         const url = AcceladeAI.config.endpoints.chat;
         const response = await fetch(url, {
@@ -75,9 +79,6 @@
         return response.json();
     };
 
-    /**
-     * Global search function
-     */
     AcceladeAI.search = async function(query, options = {}) {
         const url = AcceladeAI.config.endpoints.search;
         const response = await fetch(url, {
@@ -102,9 +103,6 @@
         return response.json();
     };
 
-    /**
-     * Parse SSE stream and yield content
-     */
     AcceladeAI.parseStream = async function*(readableStream) {
         const reader = readableStream.getReader();
         const decoder = new TextDecoder();
@@ -140,26 +138,18 @@
         }
     };
 
-    /**
-     * Format markdown-like content to HTML
-     */
     AcceladeAI.formatMarkdown = function(content) {
         if (!content) return '';
 
         return content
-            // Code blocks
             .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto my-2"><code class="text-sm">$2</code></pre>')
-            // Inline code
             .replace(/`([^`]+)`/g, '<code class="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm">$1</code>')
-            // Bold
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-            // Italic
             .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-            // Links
             .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">$1</a>')
-            // Line breaks
             .replace(/\n/g, '<br>');
     };
 
-    console.log('[AcceladeAI] Scripts loaded');
+    console.log('[AcceladeAI] Scripts loaded (fallback)');
 </script>
+@endif

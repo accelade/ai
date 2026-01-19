@@ -1,0 +1,35 @@
+{
+    "name": "@accelade/ai",
+    "version": "0.1.0",
+    "description": "AI components for Accelade - Global Search, Chat, and Copilot",
+    "author": "Fady Mondy <info@3x1.io> (https://3x1.io)",
+    "license": "MIT",
+    "homepage": "https://github.com/fadymondy/accelade",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fadymondy/accelade.git"
+    },
+    "private": true,
+    "type": "module",
+    "main": "dist/accelade-ai.js",
+    "module": "dist/accelade-ai.esm.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/accelade-ai.esm.js",
+            "require": "./dist/accelade-ai.js"
+        }
+    },
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@types/node": "^25.0.6",
+        "terser": "^5.31.0",
+        "typescript": "^5.7.0",
+        "vite": "^7.3.1"
+    }
+}

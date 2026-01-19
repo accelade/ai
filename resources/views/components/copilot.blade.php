@@ -20,14 +20,29 @@
         'Summarize the data',
         'Help me understand',
     ]);
+
+    $initialState = [
+        'isOpen' => false,
+        'messages' => [],
+        'inputMessage' => '',
+        'isLoading' => false,
+        'pageContext' => null,
+    ];
+
+    $componentConfig = [
+        'provider' => $provider ?? config('accelade-ai.default', 'openai'),
+        'model' => $model,
+        'readContext' => $readContext,
+        'keyboardShortcut' => $keyboardShortcut,
+        'suggestions' => $suggestions,
+    ];
 @endphp
 
 <div
-    data-accelade-copilot
-    data-provider="{{ $provider ?? config('accelade-ai.default', 'openai') }}"
-    data-model="{{ $model }}"
-    data-read-context="{{ $readContext ? 'true' : 'false' }}"
-    data-keyboard-shortcut="{{ $keyboardShortcut }}"
+    data-accelade
+    data-accelade-component="copilot"
+    data-accelade-state="{{ json_encode($initialState) }}"
+    data-accelade-config="{{ json_encode($componentConfig) }}"
     {{ $attributes->merge(['class' => 'fixed z-50 ' . $positionClasses]) }}
 >
     {{-- Floating Action Button --}}
@@ -176,342 +191,191 @@
             </form>
         </div>
     </div>
-</div>
 
-<script a-script>
+    <script type="text/accelade" a-script>
+    // Setup keyboard shortcut
+    const shortcut = config.keyboardShortcut?.toLowerCase() || 'cmd+shift+k';
+    document.addEventListener('keydown', (e) => {
+        const isCmd = shortcut.includes('cmd') || shortcut.includes('meta');
+        const isCtrl = shortcut.includes('ctrl');
+        const isShift = shortcut.includes('shift');
+        const isAlt = shortcut.includes('alt');
+        const key = shortcut.replace(/cmd|meta|ctrl|shift|alt|\+/gi, '').trim();
+
+        const matchesModifiers = (
+            (!isCmd || e.metaKey) &&
+            (!isCtrl || e.ctrlKey) &&
+            (!isShift || e.shiftKey) &&
+            (!isAlt || e.altKey)
+        );
+
+        if (matchesModifiers && e.key.toLowerCase() === key) {
+            e.preventDefault();
+            state.isOpen = !state.isOpen;
+        }
+    });
+
+    // Extract page context if enabled
+    function extractPageContext() {
+        const content = {
+            title: document.title,
+            url: window.location.href,
+            headings: [],
+            mainContent: '',
+            forms: [],
+            tables: []
+        };
+
+        document.querySelectorAll('h1, h2, h3').forEach(h => {
+            content.headings.push({ level: h.tagName.toLowerCase(), text: h.textContent.trim() });
+        });
+
+        const mainElement = document.querySelector('main, article, [role="main"]') || document.body;
+        const clone = mainElement.cloneNode(true);
+        clone.querySelectorAll('script, style, noscript, [data-accelade-component="copilot"]').forEach(el => el.remove());
+        content.mainContent = clone.textContent.replace(/\s+/g, ' ').trim().substring(0, 3000);
+
+        document.querySelectorAll('form').forEach(form => {
+            const fields = [];
+            form.querySelectorAll('input, select, textarea').forEach(field => {
+                if (field.type !== 'hidden' && field.name) {
+                    fields.push({ name: field.name, type: field.type || field.tagName.toLowerCase() });
+                }
+            });
+            if (fields.length > 0) content.forms.push({ fields });
+        });
+
+        document.querySelectorAll('table').forEach(table => {
+            const headers = [];
+            table.querySelectorAll('th').forEach(th => headers.push(th.textContent.trim()));
+            if (headers.length > 0) content.tables.push({ headers });
+        });
+
+        return content;
+    }
+
+    if (config.readContext) {
+        state.pageContext = extractPageContext();
+    }
+
+    function buildSystemMessage() {
+        let msg = 'You are a helpful AI assistant embedded in a web application. Be concise and helpful.';
+        if (state.pageContext) {
+            msg += `\n\nCurrent page context:\nPage title: ${state.pageContext.title}\nURL: ${state.pageContext.url}`;
+            if (state.pageContext.headings.length > 0) {
+                msg += '\n\nPage structure:';
+                state.pageContext.headings.forEach(h => { msg += `\n- ${h.level}: ${h.text}`; });
+            }
+            if (state.pageContext.mainContent) {
+                msg += `\n\nPage content summary:\n${state.pageContext.mainContent.substring(0, 1500)}`;
+            }
+        }
+        return msg;
+    }
+
+    function scrollToBottom() {
+        setTimeout(() => {
+            const container = $el.querySelector('[a-ref="messagesContainer"]');
+            if (container) container.scrollTop = container.scrollHeight;
+        }, 50);
+    }
+
     return {
-        isOpen: false,
-        messages: [],
-        inputMessage: '',
-        isLoading: false,
-        pageContext: null,
-        provider: this.$el.dataset.provider || 'openai',
-        model: this.$el.dataset.model || null,
-        readContext: this.$el.dataset.readContext === 'true',
-        keyboardShortcut: this.$el.dataset.keyboardShortcut || 'cmd+shift+k',
-
-        init() {
-            // Parse keyboard shortcut
-            this.setupKeyboardShortcut();
-
-            // Read page context if enabled
-            if (this.readContext) {
-                this.extractPageContext();
-            }
-
-            // Watch for DOM changes to update context
-            if (this.readContext) {
-                const observer = new MutationObserver(this.debounce(() => {
-                    this.extractPageContext();
-                }, 1000));
-
-                observer.observe(document.body, {
-                    childList: true,
-                    subtree: true,
-                    characterData: true
-                });
-            }
-        },
-
-        setupKeyboardShortcut() {
-            document.addEventListener('keydown', (e) => {
-                const shortcut = this.keyboardShortcut.toLowerCase();
-                const isCmd = shortcut.includes('cmd') || shortcut.includes('meta');
-                const isCtrl = shortcut.includes('ctrl');
-                const isShift = shortcut.includes('shift');
-                const isAlt = shortcut.includes('alt');
-
-                // Extract the key
-                const key = shortcut.replace(/cmd|meta|ctrl|shift|alt|\+/gi, '').trim();
-
-                const matchesModifiers = (
-                    (!isCmd || e.metaKey) &&
-                    (!isCtrl || e.ctrlKey) &&
-                    (!isShift || e.shiftKey) &&
-                    (!isAlt || e.altKey)
-                );
-
-                if (matchesModifiers && e.key.toLowerCase() === key) {
-                    e.preventDefault();
-                    this.toggleOpen();
-                }
-            });
-        },
-
-        extractPageContext() {
-            // Extract meaningful content from the page
-            const content = {
-                title: document.title,
-                url: window.location.href,
-                headings: [],
-                mainContent: '',
-                forms: [],
-                tables: [],
-                lists: []
-            };
-
-            // Get headings
-            document.querySelectorAll('h1, h2, h3').forEach(h => {
-                content.headings.push({
-                    level: h.tagName.toLowerCase(),
-                    text: h.textContent.trim()
-                });
-            });
-
-            // Get main content (prioritize main, article, or [role="main"])
-            const mainElement = document.querySelector('main, article, [role="main"]') || document.body;
-            const copilotElement = this.$el;
-
-            // Clone and clean the content
-            const clone = mainElement.cloneNode(true);
-
-            // Remove scripts, styles, and the copilot itself
-            clone.querySelectorAll('script, style, noscript, [data-accelade-copilot]').forEach(el => el.remove());
-
-            content.mainContent = clone.textContent.replace(/\s+/g, ' ').trim().substring(0, 3000);
-
-            // Get form fields
-            document.querySelectorAll('form').forEach(form => {
-                const fields = [];
-                form.querySelectorAll('input, select, textarea').forEach(field => {
-                    if (field.type !== 'hidden' && field.name) {
-                        fields.push({
-                            name: field.name,
-                            type: field.type || field.tagName.toLowerCase(),
-                            label: this.findLabel(field)
-                        });
-                    }
-                });
-                if (fields.length > 0) {
-                    content.forms.push({ fields });
-                }
-            });
-
-            // Get table headers
-            document.querySelectorAll('table').forEach(table => {
-                const headers = [];
-                table.querySelectorAll('th').forEach(th => {
-                    headers.push(th.textContent.trim());
-                });
-                if (headers.length > 0) {
-                    content.tables.push({ headers });
-                }
-            });
-
-            this.pageContext = content;
-        },
-
-        findLabel(field) {
-            // Try to find associated label
-            if (field.id) {
-                const label = document.querySelector(`label[for="${field.id}"]`);
-                if (label) {
-                    return label.textContent.trim();
-                }
-            }
-            // Check parent label
-            const parentLabel = field.closest('label');
-            if (parentLabel) {
-                return parentLabel.textContent.replace(field.value || '', '').trim();
-            }
-            return field.placeholder || field.name;
-        },
-
         toggleOpen() {
-            this.isOpen = !this.isOpen;
-            if (this.isOpen) {
-                this.$nextTick(() => {
-                    this.$el.querySelector('textarea')?.focus();
-                });
+            state.isOpen = !state.isOpen;
+            if (state.isOpen) {
+                setTimeout(() => { $el.querySelector('textarea')?.focus(); }, 100);
             }
         },
 
         clearChat() {
-            this.messages = [];
+            state.messages = [];
         },
 
         sendSuggestion(suggestion) {
-            this.inputMessage = suggestion;
+            state.inputMessage = suggestion;
             this.sendMessage();
         },
 
         handleEnter(e) {
-            if (!e.shiftKey) {
-                this.sendMessage();
-            }
+            if (!e.shiftKey) this.sendMessage();
         },
 
         async sendMessage() {
-            const message = this.inputMessage.trim();
-            if (!message || this.isLoading) return;
+            const message = state.inputMessage?.trim();
+            if (!message || state.isLoading) return;
 
-            // Add user message
-            this.messages.push({
-                role: 'user',
-                content: message
-            });
-
-            this.inputMessage = '';
-            this.isLoading = true;
-            this.scrollToBottom();
+            state.messages = [...state.messages, { role: 'user', content: message }];
+            state.inputMessage = '';
+            state.isLoading = true;
+            scrollToBottom();
 
             try {
-                // Build messages array with context
-                const systemMessage = this.buildSystemMessage();
+                const systemMessage = buildSystemMessage();
                 const apiMessages = [
                     { role: 'system', content: systemMessage },
-                    ...this.messages.map(m => ({ role: m.role, content: m.content }))
+                    ...state.messages.map(m => ({ role: m.role, content: m.content }))
                 ];
 
-                // Stream response
-                const response = await this.streamChat(apiMessages);
-
-                this.messages.push({
-                    role: 'assistant',
-                    content: response
+                const response = await fetch('/accelade-ai/stream', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'text/event-stream',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({
+                        messages: apiMessages,
+                        provider: config.provider,
+                        model: config.model
+                    })
                 });
 
-            } catch (error) {
-                console.error('Copilot error:', error);
-                this.messages.push({
-                    role: 'assistant',
-                    content: 'Sorry, I encountered an error. Please try again.'
-                });
-            } finally {
-                this.isLoading = false;
-                this.scrollToBottom();
-            }
-        },
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+                let fullContent = '';
 
-        buildSystemMessage() {
-            let systemMessage = 'You are a helpful AI assistant embedded in a web application. Be concise and helpful.';
+                if (reader) {
+                    let buffer = '';
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
 
-            if (this.pageContext) {
-                systemMessage += '\n\nCurrent page context:';
-                systemMessage += `\nPage title: ${this.pageContext.title}`;
-                systemMessage += `\nURL: ${this.pageContext.url}`;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
 
-                if (this.pageContext.headings.length > 0) {
-                    systemMessage += '\n\nPage structure:';
-                    this.pageContext.headings.forEach(h => {
-                        systemMessage += `\n- ${h.level}: ${h.text}`;
-                    });
-                }
-
-                if (this.pageContext.mainContent) {
-                    systemMessage += `\n\nPage content summary:\n${this.pageContext.mainContent.substring(0, 1500)}`;
-                }
-
-                if (this.pageContext.forms.length > 0) {
-                    systemMessage += '\n\nForms on this page:';
-                    this.pageContext.forms.forEach((form, i) => {
-                        systemMessage += `\nForm ${i + 1} fields: ${form.fields.map(f => f.label || f.name).join(', ')}`;
-                    });
-                }
-
-                if (this.pageContext.tables.length > 0) {
-                    systemMessage += '\n\nTables on this page:';
-                    this.pageContext.tables.forEach((table, i) => {
-                        systemMessage += `\nTable ${i + 1} columns: ${table.headers.join(', ')}`;
-                    });
-                }
-            }
-
-            return systemMessage;
-        },
-
-        async streamChat(messages) {
-            const url = new URL('/accelade-ai/stream', window.location.origin);
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'text/event-stream',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-                },
-                body: JSON.stringify({
-                    messages,
-                    provider: this.provider,
-                    model: this.model
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to get response');
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullContent = '';
-
-            // Add placeholder message
-            const assistantIndex = this.messages.length;
-            this.messages.push({
-                role: 'assistant',
-                content: ''
-            });
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6);
-                        if (data === '[DONE]') continue;
-
-                        try {
-                            const parsed = JSON.parse(data);
-                            if (parsed.content) {
-                                fullContent += parsed.content;
-                                this.messages[assistantIndex].content = fullContent;
-                                this.scrollToBottom();
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const data = line.slice(6);
+                                if (data === '[DONE]') continue;
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    if (parsed.content) fullContent += parsed.content;
+                                } catch (e) {}
                             }
-                        } catch (e) {
-                            // Skip invalid JSON
                         }
                     }
                 }
-            }
 
-            // Remove the placeholder and return content
-            this.messages.pop();
-            return fullContent;
+                state.messages = [...state.messages, { role: 'assistant', content: fullContent || 'No response received.' }];
+            } catch (error) {
+                console.error('Copilot error:', error);
+                state.messages = [...state.messages, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }];
+            } finally {
+                state.isLoading = false;
+                scrollToBottom();
+            }
         },
 
         formatMessage(content) {
             if (!content) return '';
-
-            // Basic markdown-like formatting
             return content
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/`(.*?)`/g, '<code class="rounded bg-gray-200 px-1 py-0.5 text-xs dark:bg-gray-600">$1</code>')
                 .replace(/\n/g, '<br>');
-        },
-
-        scrollToBottom() {
-            this.$nextTick(() => {
-                const container = this.$refs.messagesContainer;
-                if (container) {
-                    container.scrollTop = container.scrollHeight;
-                }
-            });
-        },
-
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
         }
     };
-</script>
+    </script>
+</div>

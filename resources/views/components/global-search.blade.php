@@ -236,9 +236,8 @@
             </div>
         </div>
     </div>
-</div>
 
-<script a-script>
+    <script type="text/accelade" a-script>
     // Keyboard shortcut listener
     document.addEventListener('keydown', (e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -293,4 +292,5 @@
             if (url) window.location.href = url;
         }
     };
-</script>
+    </script>
+</div>

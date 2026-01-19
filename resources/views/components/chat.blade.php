@@ -316,9 +316,8 @@
             </div>
         </div>
     </div>
-</div>
 
-<script a-script>
+    <script type="text/accelade" a-script>
     // Simple markdown renderer
     function renderMarkdown(text) {
         if (!text) return '';
@@ -475,4 +474,5 @@
             }
         }
     };
-</script>
+    </script>
+</div>
