@@ -25,14 +25,14 @@ Instead, please report them via one of the following methods:
    - Fill out the form with details
 
 2. **Email**
-   - Send an email to: security@example.com (replace with actual email)
-   - Use the subject line: `[SECURITY] Accelade Infolists Vulnerability Report`
+   - Send an email to: info@3x1.io
+   - Use the subject line: `[SECURITY] Accelade AI Vulnerability Report`
 
 ### What to Include
 
 Please include the following information in your report:
 
-- **Type of vulnerability** (e.g., XSS, SQL injection, CSRF, etc.)
+- **Type of vulnerability** (e.g., XSS, prompt injection, API key exposure, etc.)
 - **Location** of the affected source code (file path, line numbers)
 - **Steps to reproduce** the vulnerability
 - **Proof of concept** or exploit code (if possible)
@@ -78,13 +78,35 @@ We will not pursue legal action against researchers who:
 
 ## Security Best Practices
 
-When using Accelade Infolists in your application:
+When using Accelade AI in your application:
 
-### XSS Prevention
+### API Key Security
 
-- Always escape user input in Blade templates using `{{ }}` (not `{!! !!}`)
-- Be cautious when using HtmlEntry or MarkdownEntry with user content
-- Sanitize HTML content before rendering
+- **Never expose API keys** in client-side code or public repositories
+- Store API keys in `.env` files and ensure `.env` is in `.gitignore`
+- Use environment variables for all sensitive configuration
+- Consider using Laravel's encrypted environment files for production
+
+### Prompt Injection Prevention
+
+- Sanitize user input before including in AI prompts
+- Use system messages to establish context and boundaries
+- Implement rate limiting on AI endpoints
+- Log and monitor AI interactions for suspicious patterns
+
+### Data Privacy
+
+- Be cautious about what context is sent to AI providers
+- Implement consent mechanisms if sending user data to AI services
+- Consider data residency requirements for your users
+- Review AI provider data handling policies
+
+### Access Control
+
+- Protect AI endpoints with authentication middleware
+- Implement proper authorization for AI features
+- Rate limit AI requests per user/session
+- Monitor for unusual usage patterns
 
 ### Content Security Policy
 
@@ -94,12 +116,6 @@ Consider implementing a Content Security Policy header:
 // In a middleware
 $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'");
 ```
-
-### Data Validation
-
-- Validate all data before passing to infolist entries
-- Sanitize file paths for ImageEntry
-- Validate URLs before displaying
 
 ## Vulnerability Disclosure
 
@@ -114,4 +130,4 @@ After a vulnerability has been fixed, we will:
 
 For security-related questions that are not vulnerabilities, please open a regular GitHub issue or discussion.
 
-Thank you for helping keep Accelade Infolists and its users safe!
+Thank you for helping keep Accelade AI and its users safe!

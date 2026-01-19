@@ -4,15 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2517907147417d5f943b940b09785808",
+    "content-hash": "f3377de5d1b29b465891cd7ec24b8671",
     "packages": [
         {
             "name": "accelade/accelade",
             "version": "v1.0.0",
-            "dist": {
-                "type": "path",
-                "url": "../accelade",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/accelade/accelade.git",
                 "reference": "8885263adbb4e4a0a82f194133f32d19ce900432"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/accelade/accelade/zipball/8885263adbb4e4a0a82f194133f32d19ce900432",
+                "reference": "8885263adbb4e4a0a82f194133f32d19ce900432",
+                "shasum": ""
             },
             "require": {
                 "blade-ui-kit/blade-icons": "^1.8",
@@ -32,14 +38,14 @@
             "type": "library",
             "extra": {
                 "laravel": {
+                    "aliases": {
+                        "Icons": "Accelade\\Facades\\Icons",
+                        "Notify": "Accelade\\Facades\\Notify",
+                        "Accelade": "Accelade\\Facades\\Accelade"
+                    },
                     "providers": [
                         "Accelade\\AcceladeServiceProvider"
-                    ],
-                    "aliases": {
-                        "Accelade": "Accelade\\Facades\\Accelade",
-                        "Notify": "Accelade\\Facades\\Notify",
-                        "Icons": "Accelade\\Facades\\Icons"
-                    }
+                    ]
                 }
             },
             "autoload": {
@@ -47,39 +53,7 @@
                     "Accelade\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Accelade\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "pest"
-                ],
-                "test:coverage": [
-                    "pest --coverage"
-                ],
-                "format": [
-                    "pint"
-                ],
-                "format:test": [
-                    "pint --test"
-                ],
-                "mago": [
-                    "./mago lint src/ || mago lint src/"
-                ],
-                "mago:fix": [
-                    "./mago lint src/ --fix || mago lint src/ --fix"
-                ],
-                "analyse": [
-                    "@format:test",
-                    "@mago"
-                ],
-                "ci": [
-                    "@analyse",
-                    "@test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -94,6 +68,7 @@
             "description": "Reactive Blade templates with Vue, React, Svelte, Angular, or vanilla JavaScript",
             "homepage": "https://github.com/fadymondy/accelade",
             "keywords": [
+                "SPA",
                 "angular",
                 "blade",
                 "components",
@@ -101,13 +76,20 @@
                 "notifications",
                 "react",
                 "reactive",
-                "spa",
                 "svelte",
                 "vue"
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/accelade/accelade/issues",
+                "source": "https://github.com/accelade/accelade/tree/v1.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/fadymondy",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-01-18T08:04:07+00:00"
         },
         {
             "name": "blade-ui-kit/blade-icons",
