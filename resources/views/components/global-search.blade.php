@@ -40,7 +40,7 @@
         type="button"
         class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 shadow-sm transition hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200"
         title="{{ $placeholder }}"
-        @click="isOpen = true"
+        a-on:click="isOpen = true"
         a-ref="trigger"
     >
         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,6 +54,7 @@
     {{-- Modal Backdrop --}}
     <div
         a-show="isOpen"
+        a-cloak
         a-transition:enter="duration-200 ease-out"
         a-transition:enter-start="opacity-0"
         a-transition:enter-end="opacity-100"
@@ -61,14 +62,14 @@
         a-transition:leave-start="opacity-100"
         a-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 overflow-y-auto p-4 pt-[25vh] sm:p-6 sm:pt-[20vh]"
-        @click.self="isOpen = false"
-        @keydown.escape.window="isOpen = false"
+        a-on:click.self="isOpen = false"
     >
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="isOpen = false"></div>
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" a-on:click="isOpen = false"></div>
 
         {{-- Search Dialog --}}
         <div
             a-show="isOpen"
+            a-cloak
             a-transition:enter="duration-200 ease-out"
             a-transition:enter-start="opacity-0 scale-95 translate-y-4"
             a-transition:enter-end="opacity-100 scale-100 translate-y-0"
@@ -90,9 +91,9 @@
                     class="h-12 flex-1 border-0 bg-transparent px-4 text-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-0"
                     placeholder="{{ $placeholder }}"
                     a-ref="searchInput"
-                    @keydown.arrow-down.prevent="selectedIndex = Math.min(selectedIndex + 1, results.length - 1)"
-                    @keydown.arrow-up.prevent="selectedIndex = Math.max(selectedIndex - 1, 0)"
-                    @keydown.enter.prevent="$selectResult()"
+                    a-on:keydown.arrow-down.prevent="selectedIndex = Math.min(selectedIndex + 1, results.length - 1)"
+                    a-on:keydown.arrow-up.prevent="selectedIndex = Math.max(selectedIndex - 1, 0)"
+                    a-on:keydown.enter.prevent="$selectResult()"
                 />
                 <div class="flex items-center gap-2">
                     @if($useAI)
@@ -100,8 +101,8 @@
                     <button
                         type="button"
                         class="flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200"
-                        :class="useAI ? 'bg-primary-500 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'"
-                        @click="useAI = !useAI"
+                        a-bind:class="useAI ? 'bg-primary-500 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600'"
+                        a-on:click="useAI = !useAI"
                         title="Toggle AI-powered search"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +122,7 @@
                         a-show="query && !loading"
                         type="button"
                         class="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 transition hover:bg-gray-200 dark:hover:bg-gray-600"
-                        @click="query = ''; results = []"
+                        a-on:click="query = ''; results = []"
                     >
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -157,22 +158,22 @@
                                     <button
                                         type="button"
                                         class="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-150"
-                                        :class="selectedIndex === idx ? 'bg-primary-500 text-white' : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
-                                        @click="$navigateTo(result.url)"
-                                        @mouseenter="selectedIndex = idx"
+                                        a-bind:class="selectedIndex === idx ? 'bg-primary-500 text-white' : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                                        a-on:click="$navigateTo(result.url)"
+                                        a-on:mouseenter="selectedIndex = idx"
                                     >
                                         <div class="flex-1 min-w-0">
                                             <div class="truncate font-medium" a-text="result.title"></div>
                                             <div
                                                 a-show="result.subtitle"
                                                 class="truncate text-sm"
-                                                :class="selectedIndex === idx ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'"
+                                                a-bind:class="selectedIndex === idx ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'"
                                                 a-text="result.subtitle"
                                             ></div>
                                         </div>
                                         <div
                                             class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md transition-all"
-                                            :class="selectedIndex === idx ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 opacity-0 group-hover:opacity-100'"
+                                            a-bind:class="selectedIndex === idx ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 opacity-0 group-hover:opacity-100'"
                                         >
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -238,17 +239,33 @@
     </div>
 
     <script type="text/accelade" a-script>
-    // Keyboard shortcut listener
+    // Listen for open-global-search event from event bus
+    // Use $set() to properly trigger reactivity when updating state from callbacks
+    $on('open-global-search', () => {
+        $set('isOpen', true);
+        setTimeout(() => {
+            const input = $el.querySelector('[a-ref="searchInput"]');
+            if (input) input.focus();
+        }, 100);
+    });
+
+    // Keyboard shortcut listeners
     document.addEventListener('keydown', (e) => {
+        // Cmd/Ctrl+K to toggle the search modal
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
-            state.isOpen = !state.isOpen;
-            if (state.isOpen) {
+            $set('isOpen', !$get('isOpen'));
+            if ($get('isOpen')) {
                 setTimeout(() => {
                     const input = $el.querySelector('[a-ref="searchInput"]');
                     if (input) input.focus();
                 }, 100);
             }
+        }
+        // Escape key to close the modal when open
+        if (e.key === 'Escape' && $get('isOpen')) {
+            e.preventDefault();
+            $set('isOpen', false);
         }
     });
 

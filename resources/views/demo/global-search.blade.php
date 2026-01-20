@@ -53,7 +53,7 @@
             </ul>
 
             <button
-                onclick="document.querySelector('[data-accelade-global-search]')?.__accelade?.open()"
+                onclick="window.Accelade?.emit('open-global-search')"
                 class="mt-6 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-6 py-3 text-white transition-colors hover:bg-violet-700"
             >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
